@@ -128,5 +128,3 @@ def menu_principal():
         pygame.display.update()
 
 menu_principal()
-
-
