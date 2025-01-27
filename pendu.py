@@ -22,16 +22,61 @@ def draw_text(text, x, y, font, color):
     label = font.render(text, True, color)
     screen.blit(label, (x, y))
 
-def ajouter_mot_au_fichier():
-    word = input("Enter a word to add to the file: ").strip().lower()
-    if word.isalpha():
-        with open(fichier_mots, 'a') as file:
-            file.write(f"\n{word}")
-        print(f"The word '{word}' has been successfully added.")
-    else:
-        print("Error: the word must only contain letters.")
+def add_word():
+    running = True
+    word = ""
+    feedback_message = ""
+    message_display_time = 2000  # Temps d'affichage du message (en millisecondes)
+    timer_started = False
+    start_time = 0
 
-def jouer():
+    while running:
+        screen.fill(WHITE)
+        draw_text("Enter a word to add:", 200, 200, font, BLACK)
+        draw_text("Press Enter to save or ESC to cancel", 200, 300, small_font, BLACK)
+        draw_text(word, 200, 400, font, BLACK)
+        draw_text(feedback_message, 200, 450, small_font, GREEN)
+        pygame.display.update()
+
+        current_time = pygame.time.get_ticks()  # Temps actuel en millisecondes
+
+        if timer_started and current_time - start_time > message_display_time:
+            running = False  # Quitter l'ajout après quelques secondes
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                exit()
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_RETURN:  # Ajouter le mot
+                    if word.isalpha():
+                        with open(fichier_mots, 'a') as file:
+                            file.write(f" {word}")
+                        feedback_message = f"Word '{word}' added!"
+                        word = ""
+                        timer_started = True  # Démarrer le timer après un ajout réussi
+                        start_time = current_time
+                    else:
+                        feedback_message = "Invalid word! Use letters only."
+                        timer_started = True  # Démarrer le timer après une erreur
+                        start_time = current_time
+                elif event.key == pygame.K_ESCAPE:  # Quitter manuellement
+                    running = False
+                elif event.key == pygame.K_BACKSPACE:  # Effacer le dernier caractère
+                    word = word[:-1]
+                else:
+                    letter = pygame.key.name(event.key)
+                    if letter.isalpha():
+                        word += letter.lower()
+
+
+            screen.fill(WHITE)
+            draw_text("Enter a word to add:", 200, 200, font, BLACK)
+            draw_text("Press Enter to save or ESC to cancel", 200, 300, small_font, BLACK)
+            draw_text(word, 200, 400, font, BLACK)
+            pygame.display.update()
+
+def play():
     with open(fichier_mots, 'r') as file:
         allText = file.read()
         word_to_guess = random.choice(list(map(str, allText.split())))
@@ -67,7 +112,8 @@ def jouer():
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                running = False
+                pygame.quit()
+                exit()
             if event.type == pygame.KEYDOWN:
                 guess = pygame.key.name(event.key).lower()
                 if guess.isalpha() and guess not in incorrect_guesses and guess not in guessed_word:
@@ -99,9 +145,7 @@ def jouer():
 
         pygame.display.update()
 
-    pygame.quit()
-
-def menu_principal():
+def main_hub():
     running = True
     while running:
         screen.fill(WHITE)
@@ -115,16 +159,14 @@ def menu_principal():
                 running = False
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_1:
-                    pygame.quit()
-                    jouer()
-                    pygame.init()
+                    play()
                 elif event.key == pygame.K_2:
-                    pygame.quit()
-                    ajouter_mot_au_fichier()
-                    pygame.init()
+                    add_word()
                 elif event.key == pygame.K_q:
                     running = False
 
         pygame.display.update()
 
-menu_principal()
+    pygame.quit()
+
+main_hub()
